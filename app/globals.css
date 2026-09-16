@@ -1,0 +1,48 @@
+@import "tailwindcss";
+
+:root {
+  --background: #070b1d;
+  --surface: #101631;
+  --surface-raised: #171f41;
+  --line: rgba(164, 177, 255, 0.14);
+  --muted: #8993bb;
+  --text: #f5f7ff;
+  --purple: #9b5cff;
+  --cyan: #18d6ed;
+  --yellow: #ffe477;
+  --green: #5ee7a8;
+  --background-glow-a: rgba(155, 92, 255, .2);
+  --background-glow-b: rgba(24, 214, 237, .13);
+}
+
+html[data-theme="cyber"] { --background: #06151c; --surface: #0b222b; --surface-raised: #10353c; --purple: #00e5ff; --cyan: #66ffc4; --yellow: #dfff59; --background-glow-a: rgba(0, 229, 255, .18); --background-glow-b: rgba(102, 255, 196, .12); }
+html[data-theme="kingdom"] { --background: #171025; --surface: #27183d; --surface-raised: #382452; --purple: #d18cff; --cyan: #8de7ff; --yellow: #ffd166; --background-glow-a: rgba(209, 140, 255, .2); --background-glow-b: rgba(255, 209, 102, .12); }
+html[data-theme="arena"] { --background: #1d0e0c; --surface: #351816; --surface-raised: #4b211c; --purple: #ff7b6b; --cyan: #ffc857; --yellow: #ffe477; --background-glow-a: rgba(255, 123, 107, .2); --background-glow-b: rgba(255, 200, 87, .13); }
+html[data-theme="heroes"] { --background: #071521; --surface: #0e2636; --surface-raised: #143b50; --purple: #ff78c8; --cyan: #4de8ff; --yellow: #fff08a; --background-glow-a: rgba(255, 120, 200, .18); --background-glow-b: rgba(77, 232, 255, .14); }
+html[data-theme="explorers"] { --background: #0d1b17; --surface: #162d25; --surface-raised: #1d4234; --purple: #b899ff; --cyan: #6be6bd; --yellow: #f4d35e; --background-glow-a: rgba(107, 230, 189, .15); --background-glow-b: rgba(244, 211, 94, .12); }
+
+* { box-sizing: border-box; }
+html { min-width: 320px; background: var(--background); }
+body {
+  min-height: 100vh;
+  margin: 0;
+  color: var(--text);
+  background:
+    radial-gradient(circle at 10% -10%, var(--background-glow-a), transparent 35%),
+    radial-gradient(circle at 100% 15%, var(--background-glow-b), transparent 30%),
+    var(--background);
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+button, a { -webkit-tap-highlight-color: transparent; }
+button { cursor: pointer; }
+.glass { background: rgba(16, 22, 49, .72); border: 1px solid var(--line); box-shadow: 0 24px 70px rgba(0,0,0,.25); backdrop-filter: blur(18px); }
+.surface { background: linear-gradient(145deg, rgba(23,31,65,.94), rgba(12,17,39,.94)); border: 1px solid var(--line); }
+.glow-purple { box-shadow: 0 0 40px rgba(155,92,255,.2); }
+.glow-cyan { box-shadow: 0 0 40px rgba(24,214,237,.17); }
+.text-balance { text-wrap: balance; }
+.safe-bottom { padding-bottom: max(1rem, env(safe-area-inset-bottom)); }
+
+@keyframes shimmer { 0% { transform: translateX(-100%); } 100% { transform: translateX(100%); } }
+.progress-shimmer { position: relative; overflow: hidden; }
+.progress-shimmer::after { content: ""; position: absolute; inset: 0; width: 45%; background: linear-gradient(90deg, transparent, rgba(255,255,255,.22), transparent); animation: shimmer 2.5s infinite; }
