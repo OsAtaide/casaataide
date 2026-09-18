@@ -27,15 +27,19 @@ export async function GET(_request: Request, { params }: { params: Promise<{ ass
 
   async function markViewed() {
     if (!isParent) return;
-    await db.transaction((tx) => [
-      tx`select set_config('app.family_id', ${familyId}, true)`,
-      tx`
-        update public.task_evidence
-        set viewed_at = coalesce(viewed_at, now()), expires_at = coalesce(expires_at, now() + interval '2 days')
-        where assignment_id = ${assignmentId}::uuid and storage_path = ${evidence.storage_path}
-          and family_id = public.current_family_id() and purged_at is null
-      `,
-    ]);
+    try {
+      await db.transaction((tx) => [
+        tx`select set_config('app.family_id', ${familyId}, true)`,
+        tx`
+          update public.task_evidence
+          set viewed_at = coalesce(viewed_at, now()), expires_at = coalesce(expires_at, now() + interval '2 days')
+          where assignment_id = ${assignmentId}::uuid and storage_path = ${evidence.storage_path}
+            and family_id = public.current_family_id() and purged_at is null
+        `,
+      ]);
+    } catch {
+      console.warn("evidence_retention_mark_failed", { assignmentId });
+    }
   }
 
   if (evidence.storage_path.startsWith("https://") && evidence.storage_path.includes(".private.blob.vercel-storage.com/")) {
