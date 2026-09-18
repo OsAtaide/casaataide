@@ -16,8 +16,8 @@ export async function POST() {
         else 'missed'
       end,
       updated_at = now()
-      from public.tasks t join public.families f on f.id = ta.family_id
-      where ta.task_id = t.id and ta.family_id = public.current_family_id() and t.is_active and ta.status in ('pending', 'late')
+      from public.tasks t, public.families f
+      where ta.task_id = t.id and f.id = ta.family_id and ta.family_id = public.current_family_id() and t.is_active and ta.status in ('pending', 'late')
         and (((now() at time zone f.timezone)::date > ta.scheduled_for) or ((now() at time zone f.timezone)::date = ta.scheduled_for and t.due_time is not null and (now() at time zone f.timezone)::time > t.due_time))
       returning ta.id, ta.child_id, coalesce(ta.penalty_amount, t.penalty_amount, t.penalty_coins)::int as penalty_amount
     `,

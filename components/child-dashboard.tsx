@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { upload } from "@vercel/blob/client";
 import { ArrowLeft, Bell, ChevronRight, Coins, Flame, Gift, Home, Map, Medal, Settings, Shield, Sparkles, Target, Trophy, Zap } from "lucide-react";
 import { motion } from "framer-motion";
 import type { ChildSnapshot, Mission, MissionStatus } from "@/types/domain";
@@ -64,28 +65,20 @@ export function ChildDashboard({ child, demoMode, onBack, onDemoResolved }: { ch
     }
   }
   async function uploadEvidence(missionId: string, file: File) {
-    if (!file.type.startsWith("image/") || file.size > 2_000_000) {
-      setNotice("Envie uma imagem de até 2 MB.");
+    if (!["image/jpeg", "image/png", "image/webp"].includes(file.type) || file.size > 10_000_000) {
+      setNotice("Envie uma foto JPEG, PNG ou WebP de até 10 MB.");
       return;
     }
     setEvidenceLoadingId(missionId);
     setNotice(null);
     try {
-      const dataUrl = await new Promise<string>((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onload = () => typeof reader.result === "string" ? resolve(reader.result) : reject(new Error("Não foi possível ler a foto."));
-        reader.onerror = () => reject(new Error("Não foi possível ler a foto."));
-        reader.readAsDataURL(file);
-      });
-      const marker = ";base64,";
-      const markerIndex = dataUrl.indexOf(marker);
-      if (markerIndex < 0) throw new Error("Formato de foto inválido.");
       if (demoMode) {
         setMissions((current) => current.map((mission) => mission.id === missionId ? { ...mission, evidenceCount: 1 } : mission));
       } else {
-        const response = await fetch(`/api/missions/${missionId}/evidence`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ fileName: file.name, mimeType: file.type, fileSize: file.size, contentBase64: dataUrl.slice(markerIndex + marker.length) }) });
-        const body = (await response.json()) as { error?: string };
-        if (!response.ok) throw new Error(body.error ?? "Não foi possível enviar a foto.");
+        const blob = await upload(file.name, file, { access: "private", handleUploadUrl: `/api/missions/${missionId}/evidence/upload` });
+        const registerResponse = await fetch(`/api/missions/${missionId}/evidence/register`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ storageUrl: blob.url, fileName: file.name }) });
+        const registerBody = (await registerResponse.json()) as { error?: string };
+        if (!registerResponse.ok) throw new Error(registerBody.error ?? "Não foi possível confirmar o envio da foto.");
         setMissions((current) => current.map((mission) => mission.id === missionId ? { ...mission, evidenceCount: 1 } : mission));
       }
       setNotice("Foto enviada. Agora você pode concluir a missão.");
