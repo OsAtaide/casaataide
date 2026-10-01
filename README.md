@@ -74,7 +74,8 @@ O primeiro fluxo real de missões está disponível nas rotas server-only e na C
 - `PATCH /api/missions/:assignmentId` com `action=update`: responsável edita uma missão sem alterar snapshots históricos.
 - `POST /api/missions/:assignmentId/return`: responsável devolve com justificativa.
 - `POST /api/missions/:assignmentId/excuse`: responsável justifica sem recompensa ou penalidade.
-- `POST /api/missions/:assignmentId/evidence`: criança envia uma foto privada de até 2 MB.
+- `POST /api/missions/:assignmentId/evidence/upload`: criança inicia o upload direto e privado da foto.
+- `POST /api/missions/:assignmentId/evidence/register`: registra o upload concluído de forma idempotente.
 - `POST /api/missions/penalties/settle`: responsável fecha ocorrências vencidas e aplica penalidades idempotentes ao Cofre Semanal.
 
 O responsável também pode criar uma missão pela seção “Nova missão”, escolhendo os filhos, dificuldade, prioridade e aprovação obrigatória. Todas as rotas exigem sessão, definem `app.family_id` dentro da transação e usam `apply_xp_transaction`/`apply_coin_transaction` para registrar recompensas.
@@ -87,7 +88,7 @@ As migrations `202609140001_profile_ages.sql`, `202609140002_ledger_idempotency.
 
 A migration `202609140004_streak_shield_usage.sql` adiciona o registro de consumo de escudos. Um guardião pode proteger um dia elegível em `POST /api/streaks/shield/use`; o servidor valida a família, o saldo de escudos e a taxa de conclusão antes de consumir o escudo.
 
-A migration `202609160001_mission_engine.sql` adiciona snapshots de recompensa, regras de atraso, datas de início/fim, devolução, justificativa, evidência e `weekly_vaults`/`vault_transactions`. Como o ambiente atual não possui um provedor de Object Storage definido, a evidência usa um adapter de desenvolvimento privado no Neon, limitado a imagens pequenas; a interface deve ser trocada por storage de objetos com URL temporária antes de armazenar volume maior em produção.
+A migration `202609160001_mission_engine.sql` adiciona snapshots de recompensa, regras de atraso, datas de início/fim, devolução, justificativa, evidência e `weekly_vaults`/`vault_transactions`. As fotos novas usam Vercel Blob privado, aceitam JPEG, PNG e WebP de até 10 MB e são registradas no Neon sem expor a URL de armazenamento. Após a primeira visualização pelo responsável, a evidência fica disponível por dois dias; a limpeza agendada remove o objeto e preserva o histórico lógico no banco. Fotos legadas armazenadas como Base64 no Neon continuam sendo exibidas por compatibilidade.
 
 ## Preparação para produção
 
@@ -101,6 +102,8 @@ O projeto é detectado automaticamente como Next.js pela Vercel. Configure estas
 - `SESSION_SECRET`
 - `CASA_FAMILY_ID`
 - `CASA_FAMILY_NAME`
+- `BLOB_READ_WRITE_TOKEN`
+- `CRON_SECRET`
 - `SECURE_COOKIES=true`
 
 Antes do primeiro uso real, aplique as migrations SQL versionadas no branch Neon de produção. Nunca coloque a connection string em commits, no código cliente ou em mensagens de log.
